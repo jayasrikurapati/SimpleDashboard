@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Monitoring Dashboard</title>
+    <!-- Add Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: linear-gradient(45deg,#dceb7b, #e6cb60, #97e59b, #8f9f4e);
+
+            background-size: 400% 400%;
+            animation: gradientAnimation 15s infinite;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 1rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            
+        }
+
+        @keyframes pulseAnimation {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            animation: fadeIn 1s forwards;
+        }
+
+        .charts {
+            display: flex;
+            justify-content: space-around;
+            width: 80%;
+            margin-top: 2rem;
+        }
+
+        #riskDistributionChart,
+        #scatterPlot,
+        #lineChart {
+            width: 30%;
+            max-width: 300px;
+            max-height: 300px;
+            animation: fadeIn 1s forwards;
+        }
+
+        table {
+            width: 80%;
+            margin-top: 1rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            cursor: pointer;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .filter-buttons {
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .filter-buttons button {
+            margin-right: 1rem;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .filter-buttons button:hover {
+            background-color: #45a049;
+        }
+
+        .highlight {
+            background-color: #3498db;
+            color: white;
+        }
+
+        @keyframes gradientAnimation {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>User Monitoring Dashboard</h1>
+    </header>
+
+    <main>
+        <div class="filter-buttons">
+            <button onclick="filterUsers('all')">All Users</button>
+            <button onclick="filterUsers('high')">High Risk Users</button>
+            <button onclick="filterUsers('medium')">Medium Risk Users</button>
+            <button onclick="filterUsers('low')">Low Risk Users</button>
+        </div>
+
+        <div class="charts">
+            <canvas id="riskDistributionChart"></canvas>
+            <canvas id="scatterPlot"></canvas>
+            <canvas id="lineChart"></canvas>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>Username</th>
+                    <th>Risk Level</th>
+                </tr>
+            </thead>
+            <tbody id="userTableBody">
+                
+                <tr>
+                    <td>1</td>
+                    <td>User1</td>
+                    <td>High</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>User2</td>
+                    <td>Medium</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>User3</td>
+                    <td>Medium</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>User4</td>
+                    <td>Low</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>User5</td>
+                    <td>Low</td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td>User6</td>
+                    <td>Low</td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+
+    <script>
+        // Function to filter users based on risk level
+        function filterUsers(riskLevel) {
+            const rows = document.querySelectorAll('#userTableBody tr');
+            rows.forEach(row => {
+                const riskCell = row.querySelector('td:nth-child(3)');
+                const showRow = riskLevel === 'all' || riskCell.textContent.toLowerCase() === riskLevel;
+                row.style.display = showRow ? '' : 'none';
+            });
+        }
+
+        // Function to update the risk distribution chart
+        function updateRiskDistributionChart(data) {
+            const ctx = document.getElementById('riskDistributionChart').getContext('2d');
+            const riskDistributionChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(data),
+                    datasets: [{
+                        data: Object.values(data),
+                        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
+                        hoverBackgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
+                    }],
+                },
+                options: {
+                    animation: {
+                        animateRotate: true,
+                        animateScale: true,
+                    },
+                },
+            });
+        }
+
+        // Function to update the scatter plot
+        function updateScatterPlot(data) {
+            const ctx = document.getElementById('scatterPlot').getContext('2d');
+            const scatterPlot = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Risk Distribution',
+                        data,
+                        backgroundColor: '#3498db',
+                    }],
+                },
+                options: {
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: {
+                                display: true,
+                                text: 'User ID',
+                            },
+                        },
+                        y: {
+                            type: 'category',
+                            title: {
+                                display: true,
+                                text: 'Risk Level',
+                            },
+                        },
+                    },
+                },
+            });
+        }
+
+        // Function to update the line chart
+        function updateLineChart(data) {
+            const ctx = document.getElementById('lineChart').getContext('2d');
+            const lineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(entry => entry.x),
+                    datasets: [{
+                        label: 'Risk Trend',
+                        data: data.map(entry => entry.y),
+                        borderColor: '#e74c3c',
+                        borderWidth: 2,
+                        fill: false,
+                    }],
+                },
+                options: {
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: {
+                                display: true,
+                                text: 'User ID',
+                            },
+                        },
+                        y: {
+                            type: 'category',
+                            title: {
+                                display: true,
+                                text: 'Risk Level',
+                            },
+                        },
+                    },
+                },
+            });
+        }
+
+        // Initial data for the risk distribution chart, scatter plot, and line chart
+        const initialRiskData = {
+            High: 1,
+            Medium: 2,
+            Low: 3,
+        };
+
+        const scatterPlotData = [
+            { x: 1, y: 'High' },
+            { x: 2, y: 'Medium' },
+            { x: 3, y: 'Medium' },
+            { x: 4, y: 'Low' },
+            { x: 5, y: 'Low' },
+            { x: 6, y: 'Low' },
+        ];
+
+        const lineChartData = [
+            { x: 1, y: 40 },
+            { x: 2, y: 90 },
+            { x: 3, y: 60 },
+            { x: 4, y: 30 },
+            { x: 5, y: 80 },
+            { x: 6, y: 50 },
+        ];
+
+        // Update the risk distribution chart, scatter plot, and line chart with initial data
+        updateRiskDistributionChart(initialRiskData);
+        updateScatterPlot(scatterPlotData);
+        updateLineChart(lineChartData);
+
+        // Add click event listener to highlight rows in the table
+        document.getElementById('userTableBody').addEventListener('click', function (event) {
+            const selectedRow = event.target.closest('tr');
+            if (selectedRow) {
+                selectedRow.classList.toggle('highlight');
+            }
+        });
+    </script>
+
+</body>
+</html>
